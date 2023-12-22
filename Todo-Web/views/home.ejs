@@ -1,0 +1,198 @@
+<!-- home.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .todo-container,
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+
+        h2 {
+            color: #333;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            align-items: center;
+            gap: 5px;
+            display: flex;
+        }
+
+        .form-group label {
+            width: 30%;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .todo-title {
+            max-width: 70%;
+            overflow: hidden;
+            word-wrap: break-word;
+            text-align: start;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="todo-container">
+        <h2>Welcome <%=userId%>
+        </h2>
+
+        <ul id="todo-list">
+            <% todoList.forEach(function(todo) { %>
+                <li id=<%=todo._id %>>
+                    <p class="todo-title">
+                        <%= todo.title %>
+                    </p>
+                    <div class="btns">
+                        <button onclick="editTodo(this)">Edit</button>
+                        <button onclick="deleteTodo(this)">Delete</button>
+                    </div>
+                </li>
+                <% }); %>
+        </ul>
+
+        <form action="/create" method="post">
+
+            <div class="form-group">
+                <input type="text" id="uid" name="uid" value="<%= userId %>" required readonly hidden>
+            </div>
+
+            <div class="form-group">
+                <label for="title">New Todo </label>
+                <input type="text" id="title" name="title" required>
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Create</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function addTodo() {
+            const newTodoInput = document.getElementById('newTodo')
+            const todoList = document.getElementById('todo-list')
+
+            if (newTodoInput.value.trim() === '') {
+                alert('Please enter a valid ToDo.')
+                return
+            }
+
+            const li = document.createElement('li')
+            li.innerHTML = `
+            <span>${newTodoInput.value}</span>
+            <button onclick="editTodo(this)">Edit</button>
+            <button onclick="deleteTodo(this)">Delete</button>
+        `
+
+            todoList.appendChild(li)
+            newTodoInput.value = ''
+        }
+
+        function editTodo(button) {
+            const todo = button.parentNode.parentNode
+            const newTodo = prompt('Edit ToDo:', todo.querySelector('p').textContent)
+            if (newTodo !== null) {
+                todo.querySelector('p').textContent = newTodo
+                fetch(`/edit/${todo.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title: newTodo }),
+                })
+                    .catch(error => {
+                        console.error('Error updating todo:', error)
+                    })
+            }
+        }
+
+        function deleteTodo(button) {
+            const confirmDelete = confirm('Are you sure you want to delete this ToDo?')
+            const todo = button.parentNode.parentNode
+            if (confirmDelete) {
+                fetch(`/delete/${todo.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .catch(error => {
+                        console.error('Error:', error)
+                    })
+
+                todo.remove()
+            }
+        }
+    </script>
+
+</body>
+
+</html>
